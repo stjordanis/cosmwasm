@@ -1,34 +1,51 @@
+use ed25519_zebra::VerificationKey;
+
 use k256::{
     ecdsa::signature::{DigestVerifier, Signature as _}, // traits
     ecdsa::{Signature, VerifyingKey},                   // type aliases
 };
 use sha2::Digest; // trait
 
+use std::convert::TryFrom;
+
 use crate::errors::{VmError, VmResult};
 use crate::identity_digest::Identity256;
 
 pub fn secp256k1_verify(
     message_hash: &[u8],
-    signature: &[u8],
-    public_key: &[u8],
-) -> VmResult<bool> {
+    signature_bytes: &[u8],
+    public_key_bytes: &[u8],
+) -> VmResult<()> {
     // Already hashed, just build Digest container
     let message_digest = Identity256::new().chain(message_hash);
 
     let mut signature =
-        Signature::from_bytes(signature).map_err(|e| VmError::crypto_err(e.to_string()))?;
+        Signature::from_bytes(signature_bytes).map_err(|e| VmError::crypto_err(e.to_string()))?;
     // Non low-S signatures require normalization
     signature
         .normalize_s()
         .map_err(|e| VmError::crypto_err(e.to_string()))?;
 
-    let public_key = VerifyingKey::from_sec1_bytes(public_key)
+    let public_key = VerifyingKey::from_sec1_bytes(public_key_bytes)
         .map_err(|e| VmError::crypto_err(e.to_string()))?;
 
     match public_key.verify_digest(message_digest, &signature) {
         Ok(_) => Ok(true),
         Err(_) => Ok(false),
     }
+}
+
+pub fn ed25519_verify(
+    message_hash: &[u8],
+    signature_bytes: &[u8; 64],
+    public_key_bytes: &[u8; 32],
+) -> VmResult<()> {
+    // Deserialize
+    // let signature = signature_bytes.try_into().map_err(|err| VmError::crypto_err(err.to_string()))?;
+    let signature = (*signature_bytes).into();
+    VerificationKey::try_from(*public_key_bytes)
+        .and_then(|vk| vk.verify(&signature, &message_hash))
+        .map_err(|err| VmError::crypto_err(err.to_string()))
 }
 
 #[cfg(test)]
@@ -38,6 +55,7 @@ mod tests {
     use elliptic_curve::sec1::ToEncodedPoint;
     use rand_core::OsRng;
 
+    use crate::crypto::ed25519_verify;
     use k256::{
         ecdsa::signature::DigestSigner, // trait
         ecdsa::SigningKey,              // type alias
@@ -179,5 +197,34 @@ mod tests {
                 format!("verify() failed (test case {})", i)
             );
         }
+    }
+
+    #[test]
+    fn test_ed25519_verify() {
+        use ed25519_zebra::SigningKey;
+
+        // Explicit hash
+        let message_hash = Sha256::new().chain(MSG).finalize();
+
+        // Signing
+        let secret_key = SigningKey::new(&mut OsRng);
+        let signature = secret_key.sign(&message_hash);
+
+        // Types can be converted to raw byte arrays with From/Into
+        let public_key = VerificationKey::from(&secret_key);
+
+        // Verification
+        assert!(ed25519_verify(&message_hash, &signature.into(), &public_key.into()).is_ok());
+
+        // Wrong message fails
+        let bad_message_hash = Sha256::new().chain([MSG, "\0"].concat()).finalize();
+        assert!(ed25519_verify(&bad_message_hash, &signature.into(), &public_key.into()).is_err());
+
+        // Other pubkey fails
+        let other_secret_key = SigningKey::new(&mut OsRng);
+        let other_public_key = VerificationKey::from(&other_secret_key);
+        assert!(
+            ed25519_verify(&message_hash, &signature.into(), &other_public_key.into()).is_err()
+        );
     }
 }
