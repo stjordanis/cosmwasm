@@ -220,9 +220,15 @@ dependencies = [
  "chrono",
  "cosmwasm-derive",
  "cosmwasm-schema",
+ "elliptic-curve",
+ "hex",
+ "k256",
+ "rand_core",
  "schemars",
  "serde",
  "serde-json-wasm",
+ "serde_json",
+ "sha2",
  "thiserror",
 ]
 
@@ -238,14 +244,11 @@ dependencies = [
 name = "cosmwasm-vm"
 version = "0.13.2"
 dependencies = [
- "base64",
  "clap",
  "clru",
  "cosmwasm-std",
  "criterion",
- "elliptic-curve",
  "hex",
- "k256",
  "parity-wasm",
  "rand_core",
  "schemars",

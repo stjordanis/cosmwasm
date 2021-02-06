@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use crate::addresses::{CanonicalAddr, HumanAddr};
 use crate::binary::Binary;
 use crate::coins::Coin;
+use crate::crypto;
 use crate::deps::OwnedDeps;
 use crate::errors::{StdError, StdResult, SystemError};
 #[cfg(feature = "stargate")]
@@ -122,11 +123,15 @@ impl Api for MockApi {
 
     fn secp256k1_verify(
         &self,
-        _message_hash: &[u8],
-        _signature: &[u8],
-        _public_key: &[u8],
+        message_hash: &[u8],
+        signature: &[u8],
+        public_key: &[u8],
     ) -> StdResult<()> {
-        Ok(())
+        let result = match crypto::secp256k1_verify(message_hash, signature, public_key) {
+            Ok(_) => Ok(()),
+            Err(err) => Err(StdError::crypto_err(err.to_string())),
+        };
+        result
     }
 
     fn debug(&self, message: &str) {

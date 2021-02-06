@@ -6,7 +6,9 @@
 mod addresses;
 mod binary;
 mod coins;
+mod crypto;
 mod deps;
+mod dummy_sha2;
 mod entry_points;
 mod errors;
 mod ibc;

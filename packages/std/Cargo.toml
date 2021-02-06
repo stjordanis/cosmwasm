@@ -34,8 +34,16 @@ serde-json-wasm = { version = "0.3.1" }
 schemars = "0.7"
 serde = { version = "1.0.103", default-features = false, features = ["derive", "alloc"] }
 thiserror = "1.0"
+sha2 = "0.9.1"
+k256 = { version = "0.7.2", features = ["ecdsa"] }
 
 [dev-dependencies]
 cosmwasm-schema = { path = "../schema" }
 # The chrono dependency is only used in an example, which Rust compiles for us. If this causes trouble, remove it.
 chrono = "0.4"
+base64 = "0.13.0"
+hex = "0.4"
+rand_core = { version = "0.5", features = ["getrandom"] }
+elliptic-curve = "0.8.4"
+k256 = { version = "0.7.2", features = ["ecdsa", "sha256"] }
+serde_json = "1.0"

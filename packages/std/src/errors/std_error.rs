@@ -19,6 +19,8 @@ use thiserror::Error;
 /// - Add creator function in std_error_helpers.rs
 #[derive(Error, Debug)]
 pub enum StdError {
+    #[error("Crypto error: {msg}")]
+    CryptoErr { msg: String },
     /// Whenever there is no specific error type available
     #[error("Generic error: {msg}")]
     GenericErr {
@@ -78,6 +80,10 @@ pub enum StdError {
 }
 
 impl StdError {
+    pub fn crypto_err<S: Into<String>>(msg: S) -> Self {
+        StdError::CryptoErr { msg: msg.into() }
+    }
+
     pub fn generic_err<S: Into<String>>(msg: S) -> Self {
         StdError::GenericErr {
             msg: msg.into(),
@@ -151,6 +157,22 @@ impl StdError {
 impl PartialEq<StdError> for StdError {
     fn eq(&self, rhs: &StdError) -> bool {
         match self {
+            StdError::CryptoErr {
+                msg,
+                #[cfg(feature = "backtraces")]
+                    backtrace: _,
+            } => {
+                if let StdError::CryptoErr {
+                    msg: rhs_msg,
+                    #[cfg(feature = "backtraces")]
+                        backtrace: _,
+                } = rhs
+                {
+                    msg == rhs_msg
+                } else {
+                    false
+                }
+            }
             StdError::GenericErr {
                 msg,
                 #[cfg(feature = "backtraces")]
