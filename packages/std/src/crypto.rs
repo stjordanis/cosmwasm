@@ -7,6 +7,7 @@ use sha2::Digest; // trait
 use crate::errors::{StdError, StdResult};
 use crate::identity_digest::Identity256;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn secp256k1_verify(message_hash: &[u8], signature: &[u8], public_key: &[u8]) -> StdResult<()> {
     // Already hashed, just build Digest container
     let message_digest = Identity256::new().chain(message_hash);
