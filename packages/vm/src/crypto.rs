@@ -72,6 +72,14 @@ mod tests {
     // Test data originally from https://github.com/cosmos/cosmjs/blob/v0.24.0-alpha.22/packages/crypto/src/secp256k1.spec.ts#L195-L394
     const COSMOS_TESTS_JSON: &str = "./testdata/secp256k1_tests.json";
 
+    // TEST 1 from https://tools.ietf.org/html/rfc8032#section-7.1
+    const COSMOS_ED25519_MSG: &str = "";
+    const COSMOS_ED25519_PRIVATE_KEY_HEX: &str =
+        "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60";
+    const COSMOS_ED25519_PUBLIC_KEY_HEX: &str =
+        "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a";
+    const COSMOS_ED25519_SIGNATURE_HEX: &str = "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b";
+
     #[test]
     fn test_secp256k1_verify() {
         // Explicit / external hashing
@@ -216,5 +224,39 @@ mod tests {
         let other_public_key = ed25519::VerificationKey::from(&other_secret_key);
         let other_public_key_bytes: [u8; 32] = other_public_key.into();
         assert!(ed25519_verify(&message, &signature_bytes, &other_public_key_bytes).is_err());
+    }
+
+    #[test]
+    fn test_cosmos_ed25519_verify() {
+        let secret_key = ed25519::SigningKey::try_from(
+            hex::decode(COSMOS_ED25519_PRIVATE_KEY_HEX)
+                .unwrap()
+                .as_slice(),
+        )
+        .unwrap();
+        let public_key = ed25519::VerificationKey::try_from(
+            hex::decode(COSMOS_ED25519_PUBLIC_KEY_HEX)
+                .unwrap()
+                .as_slice(),
+        )
+        .unwrap();
+        let signature = secret_key.sign(&COSMOS_ED25519_MSG.as_bytes());
+
+        let signature_bytes: [u8; 64] = signature.into();
+        let public_key_bytes: [u8; 32] = public_key.into();
+
+        assert_eq!(
+            signature_bytes,
+            hex::decode(&COSMOS_ED25519_SIGNATURE_HEX)
+                .unwrap()
+                .as_slice()
+        );
+
+        assert!(ed25519_verify(
+            &COSMOS_ED25519_MSG.as_bytes(),
+            &signature_bytes,
+            &public_key_bytes
+        )
+        .is_ok());
     }
 }
