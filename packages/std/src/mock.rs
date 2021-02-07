@@ -127,11 +127,7 @@ impl Api for MockApi {
         signature: &[u8],
         public_key: &[u8],
     ) -> StdResult<()> {
-        let result = match crypto::secp256k1_verify(message_hash, signature, public_key) {
-            Ok(_) => Ok(()),
-            Err(err) => Err(StdError::crypto_err(err.to_string())),
-        };
-        result
+        crypto::secp256k1_verify(message_hash, signature, public_key)
     }
 
     fn debug(&self, message: &str) {
