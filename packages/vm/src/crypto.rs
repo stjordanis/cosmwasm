@@ -11,7 +11,11 @@ use std::convert::TryFrom;
 use crate::errors::{VmError, VmResult};
 use crate::identity_digest::Identity256;
 
-pub fn secp256k1_verify(message_hash: &[u8], signature: &[u8], public_key: &[u8]) -> VmResult<()> {
+pub fn secp256k1_verify(
+    message_hash: &[u8],
+    signature: &[u8],
+    public_key: &[u8],
+) -> VmResult<bool> {
     // Already hashed, just build Digest container
     let message_digest = Identity256::new().chain(message_hash);
 
