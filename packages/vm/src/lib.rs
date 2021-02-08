@@ -11,7 +11,6 @@ mod errors;
 mod features;
 #[cfg(feature = "stargate")]
 mod ibc_calls;
-mod identity_digest;
 mod imports;
 mod instance;
 mod limited;
