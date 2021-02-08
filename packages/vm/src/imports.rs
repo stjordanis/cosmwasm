@@ -3,7 +3,7 @@
 #[cfg(feature = "iterator")]
 use std::convert::TryInto;
 
-use crate::crypto::secp256k1_verify;
+use cosmwasm_std::crypto::secp256k1_verify;
 #[cfg(feature = "iterator")]
 use cosmwasm_std::Order;
 use cosmwasm_std::{Binary, CanonicalAddr, HumanAddr};
@@ -270,7 +270,8 @@ fn do_verify_secp256k1<A: Api, S: Storage, Q: Querier>(
 
     let pubkey = read_region(&env.memory(), pubkey_ptr, MAX_LENGTH_PUBKEY)?;
 
-    let result = secp256k1_verify(&hash, &signature, &pubkey);
+    let result = secp256k1_verify(&hash, &signature, &pubkey)
+        .map_err(|err| VmError::crypto_err(err.to_string()));
     let gas_info = GasInfo::with_cost(GAS_COST_VERIFY_SECP256K1_SIGNATURE);
     process_gas_info::<A, S, Q>(env, gas_info)?;
     match result {
