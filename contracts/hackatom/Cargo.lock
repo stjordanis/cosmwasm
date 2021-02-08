@@ -142,9 +142,11 @@ version = "0.13.2"
 dependencies = [
  "base64",
  "cosmwasm-derive",
+ "k256",
  "schemars",
  "serde",
  "serde-json-wasm",
+ "sha2",
  "thiserror",
 ]
 
@@ -163,7 +165,6 @@ dependencies = [
  "clru",
  "cosmwasm-std",
  "hex",
- "k256",
  "parity-wasm",
  "schemars",
  "serde",
